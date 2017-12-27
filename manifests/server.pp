@@ -1,27 +1,41 @@
-# == Class: yum::server
+# @summary Manage a yum repository service
 #
-# Manage a yum repository service
+# @param contact_email
+#   Set email address for server administration contact.
+#   Will be used for ServerAdmin in Apache vhost configuration.
+#
+# @param docroot
+#   Set absolute path to document root. Will be used for DocumentRoot
+#   Apache vhost configuration.
+#
+# @param gpg_keys_path
+#   Set relative path to GPG keys directory which will be in $docroot
+#   directory. $docroot/$gpg_keys_path will be created and used.
+#
+# @param gpg_user_name
+#    Set user who signs the packages. Will be used as %_gpg_name in
+#    /root/.rpmmacros.
+#
+# @param yum_server
+#   Set servername for yum repository. Will be used for ServerName in
+#   Apache vhost configuration.
+#
+# @param yum_server_http_listen_ip
+#   Set listen IP for yum repository server. Will be used for VirtualHost
+#   in Apache vhost configuration.
 #
 class yum::server (
-  $contact_email             = 'root@localhost',
-  $docroot                   = '/opt/repos',
-  # gpg_keys_path is relative to $docroot
-  # ${docroot}/${gpg_keys_path}
-  $gpg_keys_path             = 'keys',
-  $gpg_user_name             = 'Root',
-  $yum_server                = 'yum',
-  $yum_server_http_listen_ip = $::ipaddress,
+  String $contact_email             = 'root@localhost',
+  Stdlib::Absolutepath $docroot     = '/opt/repos',
+  String $gpg_keys_path             = 'keys', # gpg_keys_path is relative to $docroot, ${docroot}/${gpg_keys_path}
+  String $gpg_user_name             = 'Root',
+  String $yum_server                = 'yum',
+  String $yum_server_http_listen_ip = $::ipaddress,
 ) {
 
-  include ::apache
-
-  # validate contact_email
-  validate_absolute_path($docroot)
-  validate_string($gpg_keys_path)
-  validate_string($gpg_user_name)
-  validate_string($yum_server)
-  validate_string($yum_server_http_listen_ip)
   validate_ip_address($yum_server_http_listen_ip)
+
+  include ::apache
 
   package { 'createrepo':
     ensure => installed,
@@ -38,7 +52,7 @@ class yum::server (
     owner   => 'root',
     group   => 'root',
     mode    => '0644',
-    require => Common::Mkdir_p[$docroot],
+    require => "Exec[mkdir_p-${docroot}]",
   }
 
   # needed for signing packages
@@ -51,7 +65,12 @@ class yum::server (
     mode    => '0644',
   }
 
-  common::mkdir_p { $docroot: }
+  validate_absolute_path($docroot)
+  exec { "mkdir_p-${docroot}":
+    command => "mkdir -p ${docroot}",
+    unless  => "test -d ${docroot}",
+    path    => '/bin:/usr/bin',
+  }
 
   apache::vhost { 'yumrepo':
     docroot       => $docroot,
@@ -62,6 +81,6 @@ class yum::server (
     serveradmin   => $contact_email,
     options       => ['Indexes','FollowSymLinks','MultiViews'],
     override      => ['AuthConfig'],
-    require       => Common::Mkdir_p[$docroot],
+    require       => "Exec[mkdir_p-${docroot}]",
   }
 }

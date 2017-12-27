@@ -26,7 +26,7 @@ describe 'yum::server' do
         'owner'   => 'root',
         'group'   => 'root',
         'mode'    => '0644',
-        'require' => 'Common::Mkdir_p[/opt/repos]',
+        'require' => 'Exec[mkdir_p-/opt/repos]',
       })
     end
     it do
@@ -39,7 +39,6 @@ describe 'yum::server' do
         'mode'    => '0644',
       })
     end
-    it { should contain_common__mkdir_p('/opt/repos') }
     it do
       should contain_apache__vhost('yumrepo').with({
         'docroot'       => '/opt/repos',
@@ -50,7 +49,7 @@ describe 'yum::server' do
         'serveradmin'   => 'root@localhost',
         'options'       => ['Indexes','FollowSymLinks','MultiViews'],
         'override'      => ['AuthConfig'],
-        'require'       => 'Common::Mkdir_p[/opt/repos]',
+        'require'       => 'Exec[mkdir_p-/opt/repos]',
       })
     end
   end
@@ -65,14 +64,13 @@ describe 'yum::server' do
     it do
       should contain_file('gpg_keys_dir').with({
         'path'    => '/spec/tests/keys',
-        'require' => 'Common::Mkdir_p[/spec/tests]',
+        'require' => 'Exec[mkdir_p-/spec/tests]',
       })
     end
-    it { should contain_common__mkdir_p('/spec/tests') }
     it do
       should contain_apache__vhost('yumrepo').with({
         'docroot' => '/spec/tests',
-        'require' => 'Common::Mkdir_p[/spec/tests]',
+        'require' => 'Exec[mkdir_p-/spec/tests]',
       })
     end
   end
@@ -103,23 +101,23 @@ describe 'yum::server' do
     let(:mandatory_params) { {} }
 
     validations = {
-      'absolute_path' => {
+      'Stdlib::Absolutepath' => {
         :name    => %w(docroot),
         :valid   => ['/absolute/filepath', '/absolute/directory/'],
-        :invalid => ['../invalid', %w(array), { 'ha' => 'sh' }, 3, 2.42, true, false, nil],
-        :message => 'is not an absolute path',
+        :invalid => ['../invalid', %w(array), { 'ha' => 'sh' }, 3, 2.42, false, nil],
+        :message => 'expects a (match for|match for Stdlib::Absolutepath =|Stdlib::Absolutepath =) Variant\[Stdlib::Windowspath.*Stdlib::Unixpath', # Puppet (4.x|5.0 & 5.1|5.x)
       },
       'ip address' => {
         :name    => %w(yum_server_http_listen_ip),
         :valid   => %w(127.0.0.1 194.232.104.150 3ffe:0505:0002:: ::1/64 fe80::a00:27ff:fe94:44d6/64),
-        :invalid => ['127.0.0.256', '23.43.9.22/64', %w(array), { 'ha' => 'sh' }, true, false],
-        :message => '(is not a valid IP address|is not a string)',
+        :invalid => ['127.0.0.256', '23.43.9.22/64', %w(array), { 'ha' => 'sh' }, false],
+        :message => '(is not a valid IP address|expects a String)', # (code|Puppet 4 & 5)
       },
       'string' => {
         :name    => %w(gpg_keys_path gpg_user_name yum_server),
         :valid   => ['string'],
-        :invalid => [%w(array), { 'ha' => 'sh' }, true, false],
-        :message => 'is not a string',
+        :invalid => [%w(array), { 'ha' => 'sh' }, false],
+        :message => 'expects a String', # Puppet 4 & 5
       },
     }
 
