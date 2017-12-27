@@ -20,15 +20,13 @@ describe 'yum::rpm_gpg_key' do
     let(:params) { mandatory_params }
 
     it { should compile.with_all_deps }
-    it { should have_common__remove_if_empty_resource_count(1) }
-    it { should contain_common__remove_if_empty('/etc/pki/rpm-gpg/RPM-GPG-KEY-RSPEC-242') }
     it do
       should contain_exec('yum_wget_gpgkey_for_spectest_repo').with({
         'command' => 'wget http://yum.domain.tld/keys/RPM-GPG-KEY-RSPEC-242 -O /etc/pki/rpm-gpg/RPM-GPG-KEY-RSPEC-242',
         'creates' => '/etc/pki/rpm-gpg/RPM-GPG-KEY-RSPEC-242',
         'path'    => '/bin:/usr/bin:/sbin:/usr/sbin',
         'notify'  => 'Exec[yum_rpm_import_spectest_gpgkey]',
-        'require' => 'Common::Remove_if_empty[/etc/pki/rpm-gpg/RPM-GPG-KEY-RSPEC-242]',
+        'require' => 'Exec[remove_if_empty-/etc/pki/rpm-gpg/RPM-GPG-KEY-RSPEC-242]',
       })
     end
     it do
@@ -49,12 +47,11 @@ describe 'yum::rpm_gpg_key' do
   context 'with gpgkey set to valid string </spec/tests/RPM-GPG-KEY-RSPEC-242>' do
     let(:params) { mandatory_params.merge({ :gpgkey => '/spec/tests/RPM-GPG-KEY-RSPEC-242' }) }
 
-    it { should contain_common__remove_if_empty('/spec/tests/RPM-GPG-KEY-RSPEC-242') }
     it do
       should contain_exec('yum_wget_gpgkey_for_spectest_repo').with({
         'command' => 'wget http://yum.domain.tld/keys/RPM-GPG-KEY-RSPEC-242 -O /spec/tests/RPM-GPG-KEY-RSPEC-242',
         'creates' => '/spec/tests/RPM-GPG-KEY-RSPEC-242',
-        'require' => 'Common::Remove_if_empty[/spec/tests/RPM-GPG-KEY-RSPEC-242]',
+        'require' => 'Exec[remove_if_empty-/spec/tests/RPM-GPG-KEY-RSPEC-242]',
       })
     end
     it { should contain_exec('yum_rpm_import_spectest_gpgkey').with_command('rpm --import /spec/tests/RPM-GPG-KEY-RSPEC-242') }

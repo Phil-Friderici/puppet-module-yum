@@ -26,7 +26,7 @@ describe 'yum::server' do
         'owner'   => 'root',
         'group'   => 'root',
         'mode'    => '0644',
-        'require' => 'Common::Mkdir_p[/opt/repos]',
+        'require' => 'Exec[mkdir_p-/opt/repos]',
       })
     end
     it do
@@ -39,7 +39,6 @@ describe 'yum::server' do
         'mode'    => '0644',
       })
     end
-    it { should contain_common__mkdir_p('/opt/repos') }
     it do
       should contain_apache__vhost('yumrepo').with({
         'docroot'       => '/opt/repos',
@@ -50,7 +49,7 @@ describe 'yum::server' do
         'serveradmin'   => 'root@localhost',
         'options'       => ['Indexes','FollowSymLinks','MultiViews'],
         'override'      => ['AuthConfig'],
-        'require'       => 'Common::Mkdir_p[/opt/repos]',
+        'require'       => 'Exec[mkdir_p-/opt/repos]',
       })
     end
   end
@@ -65,14 +64,13 @@ describe 'yum::server' do
     it do
       should contain_file('gpg_keys_dir').with({
         'path'    => '/spec/tests/keys',
-        'require' => 'Common::Mkdir_p[/spec/tests]',
+        'require' => 'Exec[mkdir_p-/spec/tests]',
       })
     end
-    it { should contain_common__mkdir_p('/spec/tests') }
     it do
       should contain_apache__vhost('yumrepo').with({
         'docroot' => '/spec/tests',
-        'require' => 'Common::Mkdir_p[/spec/tests]',
+        'require' => 'Exec[mkdir_p-/spec/tests]',
       })
     end
   end
