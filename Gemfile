@@ -6,7 +6,9 @@ else
   gem 'puppet', :require => false
 end
 
-gem 'facter', '>= 2.2.0'
+gem 'facter', '~> 1.0'   if ENV['PUPPET_GEM_VERSION'] < '~> 3.5.0'
+gem 'facter', '>= 2.2.0' if ENV['PUPPET_GEM_VERSION'] >= '~> 3.5.0'
+
 gem 'rspec-puppet', '~> 2.0'
 gem 'puppet-lint', '~> 2.0'
 gem 'puppet-lint-absolute_classname-check'
